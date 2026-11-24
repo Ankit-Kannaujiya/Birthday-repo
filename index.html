@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500&family=Playfair+Display:ital,wght@0,500;1,500&family=Poppins:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <title>For my love</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+
+<body class="hidden">
+    <main>
+        <header class="hero">
+            <p class="lead" id="lead"></p>
+            <h1 id="name"></h1>
+            <p class="tag" id="tag"></p>
+        </header>
+        <section class="block">
+            <h2>Together for</h2>
+            <div class="cnt" id="since"></div>
+        </section>
+        <section class="block">
+            <h2 id="bh">Until your birthday</h2>
+            <div class="cnt" id="bday"></div>
+        </section>
+        <section class="two">
+            <article class="glass note">
+                <h2>Today’s note</h2>
+                <p id="note"></p>
+            </article>
+            <a class="glass potd" href="gallery.html"><img id="potd" alt=""><span>Photo of the day</span></a>
+        </section>
+    </main>
+    <script type="module">
+        import {guard, renderNav, hearts, diff, CONFIG as C} from './js/app.js';
+        const me = await guard();
+        if (me) {
+            renderNav('index'); hearts();
+            const $ = id => document.getElementById(id);
+            const [, bm, bd] = C.BIRTHDAY.split('-').map(Number);
+            const now = new Date(), t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const nb = new Date(now.getFullYear(), bm - 1, bd), isB = +nb === +t0;
+            if (nb < t0) nb.setFullYear(nb.getFullYear() + 1);
+            $('name').textContent = C.HER_NAME;
+            $('lead').textContent = isB ? 'Happy birthday' : (C.NICKNAMES[0] || '');
+            if (isB) {document.body.classList.add('bday'); const f = () => window.confetti && confetti({particleCount: 90, spread: 100, origin: {y: .65}}); f(); setInterval(f, 4500)}
+            // typewriter tagline
+            const tg = $('tag'); let ti = 0, ci = 0, del = false;
+            (function type() {
+                const s = C.TAGLINE[ti]; ci += del ? -1 : 1; tg.textContent = s.slice(0, ci); let d = del ? 30 : 70;
+                if (!del && ci === s.length) {del = true; d = 1800} else if (del && ci === 0) {del = false; ti = (ti + 1) % C.TAGLINE.length; d = 400} setTimeout(type, d)
+            })();
+            // daily note and photo
+            const day = Math.floor(Date.now() / 864e5);
+            $('note').textContent = C.NOTES[day % C.NOTES.length];
+            const sp = C.SAMPLES[day % C.SAMPLES.length];
+            $('potd').src = 'assets/images/sample/' + sp.file; $('potd').onerror = e => e.target.style.display = 'none';
+            // counters
+            const box = (n, l) => '<div><b>' + n + '</b><small>' + l + '</small></div>';
+            function tick() {
+                const d = diff(C.TOGETHER_SINCE + 'T00:00:00');
+                $('since').innerHTML = box(d.y, 'years') + box(d.m, 'months') + box(d.d, 'days') + box(d.h, 'hours') + box(d.mi, 'minutes') + box(d.s, 'seconds');
+                if (isB) {$('bh').textContent = 'Today is the day'; $('bday').innerHTML = ''; return }
+                const s = Math.floor((nb - new Date()) / 1000);
+                $('bday').innerHTML = box(Math.floor(s / 86400), 'days') + box(Math.floor(s % 86400 / 3600), 'hours') + box(Math.floor(s % 3600 / 60), 'minutes') + box(s % 60, 'seconds');
+            }
+            tick(); setInterval(tick, 1000);
+        }
+    </script>
+</body>
+
+</html>
